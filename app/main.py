@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from app.schemas import AgentIngestPayload
+from app.transform import normalize_agent_payload
 
 app = FastAPI(title="Agent Data Normalizer API")
 
@@ -13,7 +14,12 @@ def health_check():
 
 @app.post("/agents")
 def ingest_agent(payload: AgentIngestPayload):
+    try:
+        normalized = normalize_agent_payload(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    
     return {
-        "message": "Payload received successfully",
-        "agent_id": payload.agentId
+        "message": "Payload normalized successfully",
+        "normalized_data": normalized
     }
